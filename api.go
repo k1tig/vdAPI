@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/k1tig/vdAPI/middleware"
+	middleware "github.com/k1tig/vdAPI/middleware"
 )
 
 type APIserver struct {
