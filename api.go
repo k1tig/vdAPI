@@ -27,7 +27,11 @@ func (s *APIserver) Run() error {
 	router.HandleFunc("GET /racer", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("\n\nRacers: "))
 		for _, i := range racers {
-			w.Write([]byte(i.Name + " "))
+			jsonRes, err := json.Marshal(i)
+			if err != nil {
+				return
+			}
+			w.Write(jsonRes)
 		}
 	})
 	router.HandleFunc("POST /racer", func(w http.ResponseWriter, r *http.Request) {
@@ -51,3 +55,5 @@ func (s *APIserver) Run() error {
 }
 
 // curl -X POST -H "Content-Type: application/json" -d '{"racername":"MeeDok"}' http://localhost:8080/racer
+
+// curl -X GET http://localhost:8080/racer
