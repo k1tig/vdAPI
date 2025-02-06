@@ -31,10 +31,3 @@ func (s *APIserver) Run() error {
 	log.Println("server starting on:", s.addr)
 	return server.ListenAndServe()
 }
-
-func RequestLoggerMiddleware(next http.Handler) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("method: %s, path: %s", r.Method, r.URL.Path)
-		next.ServeHTTP(w, r)
-	}
-}
