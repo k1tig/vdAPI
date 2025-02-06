@@ -2,8 +2,9 @@ package main
 
 import (
 	"log"
-	"middleware"
 	"net/http"
+
+	"github.com/k1tig/vdAPI/middleware"
 )
 
 type APIserver struct {
