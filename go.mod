@@ -1,3 +1,4 @@
-module github.com/k1tig/vdAPI
+module main
 
 go 1.22.1
+
