@@ -1,3 +1,2 @@
-module github.com/k1tig/vdAPI/middleware
-
+module middleware
 go 1.23.5
