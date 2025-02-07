@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 
@@ -19,9 +20,30 @@ func NewAPIServer(addr string) *APIserver {
 
 func (s *APIserver) Run() error {
 	router := http.NewServeMux() //list routes below
-	router.HandleFunc("GET /races/{raceID}", func(w http.ResponseWriter, r *http.Request) {
+	/*router.HandleFunc("GET /racer/{raceID}", func(w http.ResponseWriter, r *http.Request) {
 		raceID := r.PathValue("raceID")
 		w.Write([]byte("Race ID: " + raceID))
+	})*/
+	router.HandleFunc("GET /racer", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("\n\nRacers: "))
+		for _, i := range racers {
+			jsonRes, err := json.Marshal(i)
+			if err != nil {
+				return
+			}
+			w.Write(jsonRes)
+		}
+	})
+	router.HandleFunc("POST /racer", func(w http.ResponseWriter, r *http.Request) {
+		var racer racer
+		err := json.NewDecoder(r.Body).Decode(&racer)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		racers = append(racers, racer)
+		w.Write([]byte("\n\nEntered: " + racer.Name))
+
 	})
 
 	server := http.Server{
@@ -31,3 +53,7 @@ func (s *APIserver) Run() error {
 	log.Println("server starting on:", s.addr)
 	return server.ListenAndServe()
 }
+
+// curl -X POST -H "Content-Type: application/json" -d '{"racername":"MeeDok"}' http://localhost:8080/racer
+
+// curl -X GET http://localhost:8080/racer
