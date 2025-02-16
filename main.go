@@ -1,5 +1,7 @@
 package main
 
+import "time"
+
 type racer struct {
 	Name        string      `json:"racername"`
 	QualifyTime int         `json:"racerQaulifyTime"` //Maybe for server side sorting later?
@@ -7,10 +9,14 @@ type racer struct {
 }
 
 type raceGroup struct {
-	GroupId  int     `json:"rgGroupId"`
-	GroupRev int     `json:"rgGroupRev"`
-	Racers   []racer `json:"rgRacer"`
+	GroupId  int       `json:"rgGroupId"`
+	GroupRev int       `json:"rgGroupRev"`
+	Racers   []racer   `json:"rgRacer"`
+	Livetime time.Time `json:"rgTime"`
 }
+
+// Lifetime counter for in program data
+var maxTime time.Duration = 1 * time.Minute
 
 type racerGroupResponse struct {
 	Groups []raceGroup `json:"raceGroups"`
@@ -19,6 +25,22 @@ type racerGroupResponse struct {
 var racerGroups []raceGroup
 
 func main() {
+
+	go func() {
+		ticker := time.NewTicker(1 * time.Minute)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-ticker.C:
+				for index, item := range racerGroups {
+					if time.Since(item.Livetime) > maxTime {
+						racerGroups = append(racerGroups[:index], racerGroups[index+1:]...)
+					}
+				}
+			}
+		}
+	}()
 	server := NewAPIServer((":8080"))
 	server.Run()
 }
