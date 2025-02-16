@@ -12,6 +12,10 @@ type raceGroup struct {
 	Racers   []racer `json:"rgRacer"`
 }
 
+type racerGroupResponse struct {
+	Groups []raceGroup `json:"raceGroups"`
+}
+
 var racerGroups []raceGroup
 
 func main() {
