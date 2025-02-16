@@ -74,6 +74,8 @@ func createGroup(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error Marshalling JSON", http.StatusInternalServerError)
 		return
 	}
+
+	racerGroups = append(racerGroups, rg)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"message": "Group Created Successfully"}`))
 }
