@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/k1tig/vdAPI/middleware"
 )
@@ -20,31 +21,9 @@ func NewAPIServer(addr string) *APIserver {
 
 func (s *APIserver) Run() error {
 	router := http.NewServeMux() //list routes below
-	/*router.HandleFunc("GET /racer/{raceID}", func(w http.ResponseWriter, r *http.Request) {
-		raceID := r.PathValue("raceID")
-		w.Write([]byte("Race ID: " + raceID))
-	})*/
-	router.HandleFunc("GET /racer", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("\n\nRacers: "))
-		for _, i := range racers {
-			jsonRes, err := json.Marshal(i)
-			if err != nil {
-				return
-			}
-			w.Write(jsonRes)
-		}
-	})
-	router.HandleFunc("POST /racer", func(w http.ResponseWriter, r *http.Request) {
-		var racer racer
-		err := json.NewDecoder(r.Body).Decode(&racer)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		racers = append(racers, racer)
-		w.Write([]byte("\n\nEntered: " + racer.Name))
-
-	})
+	router.HandleFunc("GET /groups", getGroups)
+	router.HandleFunc("GET /group/:id", getGroupById)
+	router.HandleFunc("POST /groups", createGroup)
 
 	server := http.Server{
 		Addr:    s.addr,
@@ -53,6 +32,76 @@ func (s *APIserver) Run() error {
 	log.Println("server starting on:", s.addr)
 	return server.ListenAndServe()
 }
+
+func getGroups(w http.ResponseWriter, r *http.Request) {
+	resp, err := json.Marshal(racerGroups)
+	if err != nil {
+		http.Error(w, "Error Marshalling JSON", http.StatusInternalServerError)
+		return
+	}
+	w.Write(resp)
+}
+
+func getGroupById(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		http.Error(w, "Invalid id parameter", http.StatusBadRequest)
+	}
+	for _, i := range racerGroups {
+		if i.GroupId == id {
+			resp, err := json.Marshal(i)
+			if err != nil {
+				http.Error(w, "Error Marshalling JSON", http.StatusInternalServerError)
+				return
+			}
+			w.Write(resp)
+		}
+	}
+
+}
+
+func createGroup(w http.ResponseWriter, r *http.Request) {
+
+	//probably need media type verification?
+	dec := json.NewDecoder(r.Body)
+
+	var rg raceGroup
+	err := dec.Decode(&rg)
+	// just a bookmark for future incoming data handling
+	//dec.DisallowUnknownFields()
+
+	if err != nil {
+		http.Error(w, "Error Marshalling JSON", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`{"message": "Group Created Successfully"}`))
+}
+
+func updateGroup(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		http.Error(w, "Invalid id parameter", http.StatusBadRequest)
+	}
+
+	dec := json.NewDecoder(r.Body)
+	var rgUpdate raceGroup
+	err = dec.Decode(&rgUpdate)
+
+	if err != nil {
+		http.Error(w, "Error Marshalling JSON", http.StatusInternalServerError)
+		return
+	}
+
+	for _, i := range racerGroups {
+		if i.GroupId == id {
+			//do stuff
+		}
+	}
+
+}
+
+// The group.rev PUT needs to be managed in a way to not acccept certain versions.
 
 // curl -X POST -H "Content-Type: application/json" -d '{"racername":"MeeDok"}' http://localhost:8080/racer
 
