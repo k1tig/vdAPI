@@ -151,7 +151,6 @@ func updateGroup(w http.ResponseWriter, r *http.Request) {
 	dec := json.NewDecoder(r.Body)
 	var rgUpdate raceGroup
 	err = dec.Decode(&rgUpdate)
-
 	if err != nil {
 		http.Error(w, "Error Marshalling JSON", http.StatusInternalServerError)
 		return
@@ -161,6 +160,20 @@ func updateGroup(w http.ResponseWriter, r *http.Request) {
 	defer mutex.Unlock()
 	for targetGroup, i := range racerGroups {
 		if i.GroupId == id {
+			if rgUpdate.GroupPhrase != i.GroupPhrase {
+				respStruct := APIResponse{
+					Success: false,
+					Message: "Permision denied: Passphrase incorrect",
+				}
+				resp, err := json.Marshal(respStruct)
+				if err != nil {
+					http.Error(w, "Error Marshalling JSON", http.StatusInternalServerError)
+					return
+				}
+				w.WriteHeader(http.StatusOK)
+				w.Write(resp)
+				break
+			}
 			if i.GroupRev != rgUpdate.GroupRev {
 				respStruct := APIResponse{
 					Success: false,
@@ -175,6 +188,7 @@ func updateGroup(w http.ResponseWriter, r *http.Request) {
 				w.Write(resp)
 				break
 			}
+
 			//added work to replace whole bracket instead of just updating, figure out better way later
 			racerGroups[targetGroup] = rgUpdate
 			racerGroups[targetGroup].GroupRev++

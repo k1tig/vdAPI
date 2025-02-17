@@ -1,3 +1,8 @@
+// TODO
+// - Middleware: Rate limit general calls + createGroups POST
+// - Tidy up form validation responses
+// - Make sure all responses follow standard resp
+
 package main
 
 import "time"
