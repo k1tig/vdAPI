@@ -44,6 +44,8 @@ func (s *APIserver) Run() error {
 }
 
 func getGroups(w http.ResponseWriter, r *http.Request) {
+	mutex.Lock()
+	defer mutex.Unlock()
 	data := racerGroupResponse{
 		Groups: racerGroups,
 	}
@@ -56,6 +58,7 @@ func getGroups(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error Marshalling JSON", http.StatusInternalServerError)
 		return
 	}
+	w.WriteHeader(http.StatusOK)
 	w.Write(resp)
 }
 
@@ -73,10 +76,12 @@ func getGroupById(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, "Error Marshalling JSON", http.StatusInternalServerError)
 				return
 			}
+			w.WriteHeader(http.StatusOK)
 			w.Write(resp)
 			break
 		}
 	}
+	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`"Message" : "Group not found"`))
 
 }
@@ -94,7 +99,30 @@ func createGroup(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error Marshalling JSON", http.StatusInternalServerError)
 		return
 	}
+
+	if rg.GroupPhrase == "" {
+
+		respStruct := APIResponse{
+			Success: false,
+			Message: "Passphrase void",
+		}
+
+		resp, err := json.Marshal(respStruct)
+		if err != nil {
+			http.Error(w, "Error Marshalling JSON", http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		w.Write(resp)
+
+		return
+
+	}
+
 	// Not sure if a more specific lock is justified?
+	rg.GroupId = groupCounter
+	groupCounter++
 	mutex.Lock()
 	racerGroups = append(racerGroups, rg)
 	mutex.Unlock()

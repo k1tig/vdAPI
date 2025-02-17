@@ -2,6 +2,8 @@ package main
 
 import "time"
 
+var groupCounter = 1
+
 type racer struct {
 	Name        string      `json:"racername"`
 	QualifyTime int         `json:"racerQaulifyTime"` //Maybe for server side sorting later?
@@ -9,10 +11,11 @@ type racer struct {
 }
 
 type raceGroup struct {
-	GroupId  int       `json:"rgGroupId"`
-	GroupRev int       `json:"rgGroupRev"`
-	Racers   []racer   `json:"rgRacer"`
-	Livetime time.Time `json:"rgTime"`
+	GroupId     int       `json:"rgGroupId"`
+	GroupPhrase string    `json:"rgGroupPhrase"`
+	GroupRev    int       `json:"rgGroupRev"`
+	Racers      []racer   `json:"rgRacer"`
+	Livetime    time.Time `json:"rgTime"`
 }
 
 // Lifetime counter for in program data
@@ -33,9 +36,11 @@ func main() {
 		for {
 			select {
 			case <-ticker.C:
-				for index, item := range racerGroups {
-					if time.Since(item.Livetime) > maxTime {
-						racerGroups = append(racerGroups[:index], racerGroups[index+1:]...)
+				if racerGroups != nil {
+					for index, item := range racerGroups {
+						if time.Since(item.Livetime) > maxTime {
+							racerGroups = append(racerGroups[:index], racerGroups[index+1:]...)
+						}
 					}
 				}
 			}
@@ -48,7 +53,7 @@ func main() {
 /*
 
 {
-  "rgGroupId": 1,
+  "rgGroupPhrase": "banana",
   "rgGroupRev": 1,
   "rgRacer":[
     {"racerName": "Eedok",
