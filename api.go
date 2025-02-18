@@ -49,15 +49,11 @@ func getGroups(w http.ResponseWriter, r *http.Request) {
 	data := racerGroupResponse{
 		Groups: racerGroups,
 	}
-	response := APIResponse{
+	respStruct := APIResponse{
 		Success: true,
 		Data:    data,
 	}
-	resp, err := json.Marshal(response)
-	if err != nil {
-		http.Error(w, "Error Marshalling JSON", http.StatusInternalServerError)
-		return
-	}
+	resp := makeResponse(respStruct, w)
 	w.WriteHeader(http.StatusOK)
 	w.Write(resp)
 }
@@ -69,16 +65,16 @@ func getGroupById(w http.ResponseWriter, r *http.Request) {
 	}
 	mutex.Lock()
 	defer mutex.Unlock()
-	for _, i := range racerGroups {
-		if i.GroupId == id {
-			resp, err := json.Marshal(i)
+	for _, group := range racerGroups {
+		if group.GroupId == id {
+			resp, err := json.Marshal(group)
 			if err != nil {
 				http.Error(w, "Error Marshalling JSON", http.StatusInternalServerError)
 				return
 			}
 			w.WriteHeader(http.StatusOK)
 			w.Write(resp)
-			break
+			return
 		}
 	}
 	w.WriteHeader(http.StatusOK)
@@ -87,7 +83,6 @@ func getGroupById(w http.ResponseWriter, r *http.Request) {
 }
 
 func createGroup(w http.ResponseWriter, r *http.Request) {
-
 	//probably need media type verification?
 	dec := json.NewDecoder(r.Body)
 
@@ -99,27 +94,16 @@ func createGroup(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error Marshalling JSON", http.StatusInternalServerError)
 		return
 	}
-
 	if rg.GroupPhrase == "" {
-
 		respStruct := APIResponse{
 			Success: false,
 			Message: "Passphrase void",
 		}
-
-		resp, err := json.Marshal(respStruct)
-		if err != nil {
-			http.Error(w, "Error Marshalling JSON", http.StatusInternalServerError)
-			return
-		}
-
+		resp := makeResponse(respStruct, w)
 		w.WriteHeader(http.StatusOK)
 		w.Write(resp)
-
 		return
-
 	}
-
 	// Not sure if a more specific lock is justified?
 	rg.GroupId = groupCounter
 	groupCounter++
@@ -132,12 +116,7 @@ func createGroup(w http.ResponseWriter, r *http.Request) {
 		Message: "Group Created Succeffully",
 	}
 
-	resp, err := json.Marshal(respStruct)
-	if err != nil {
-		http.Error(w, "Error Marshalling JSON", http.StatusInternalServerError)
-		return
-	}
-
+	resp := makeResponse(respStruct, w)
 	w.WriteHeader(http.StatusOK)
 	w.Write(resp)
 }
@@ -165,11 +144,7 @@ func updateGroup(w http.ResponseWriter, r *http.Request) {
 					Success: false,
 					Message: "Permision denied: Passphrase incorrect",
 				}
-				resp, err := json.Marshal(respStruct)
-				if err != nil {
-					http.Error(w, "Error Marshalling JSON", http.StatusInternalServerError)
-					return
-				}
+				resp := makeResponse(respStruct, w)
 				w.WriteHeader(http.StatusOK)
 				w.Write(resp)
 				break
@@ -179,11 +154,7 @@ func updateGroup(w http.ResponseWriter, r *http.Request) {
 					Success: false,
 					Message: "Error: Client group revision requires update",
 				}
-				resp, err := json.Marshal(respStruct)
-				if err != nil {
-					http.Error(w, "Error Marshalling JSON", http.StatusInternalServerError)
-					return
-				}
+				resp := makeResponse(respStruct, w)
 				w.WriteHeader(http.StatusOK)
 				w.Write(resp)
 				break
@@ -193,10 +164,18 @@ func updateGroup(w http.ResponseWriter, r *http.Request) {
 			racerGroups[targetGroup] = rgUpdate
 			racerGroups[targetGroup].GroupRev++
 		}
-
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"message": "Group Updated Successfully"}`))
 	}
 }
 
 // Need to standardize the JSON response format
+func makeResponse(response APIResponse, w http.ResponseWriter) []byte {
+	respStruct := response
+	resp, err := json.Marshal(respStruct)
+	if err != nil {
+		http.Error(w, "Error Marshalling JSON", http.StatusInternalServerError)
+		return nil
+	}
+	return resp
+}
