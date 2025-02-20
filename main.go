@@ -2,55 +2,12 @@
 // - Middleware: Rate limit general calls + createGroups POST
 // - Tidy up form validation responses
 // - Make sure all responses follow standard resp
+// - Strip passphrase from group calls
 
 package main
 
-import "time"
-
-var groupCounter = 1
-
-type racer struct {
-	Name        string      `json:"racername"`
-	QualifyTime int         `json:"racerQaulifyTime"` //Maybe for server side sorting later?
-	Racetimes   [10]float32 `json:"racerRaceTimes"`
-}
-
-type raceGroup struct {
-	GroupId     int       `json:"rgGroupId"`
-	GroupPhrase string    `json:"rgGroupPhrase"`
-	GroupRev    int       `json:"rgGroupRev"`
-	Racers      []racer   `json:"rgRacer"`
-	Livetime    time.Time `json:"rgTime"`
-}
-
-// Lifetime counter for in program data
-var maxTime time.Duration = 1 * time.Minute
-
-type racerGroupResponse struct {
-	Groups []raceGroup `json:"raceGroups"`
-}
-
-var racerGroups []raceGroup
-
 func main() {
-
-	go func() {
-		ticker := time.NewTicker(1 * time.Minute)
-		defer ticker.Stop()
-
-		for {
-			select {
-			case <-ticker.C:
-				if racerGroups != nil {
-					for index, item := range racerGroups {
-						if time.Since(item.Livetime) > maxTime {
-							racerGroups = append(racerGroups[:index], racerGroups[index+1:]...)
-						}
-					}
-				}
-			}
-		}
-	}()
+	go groupTimeout() // removes groups that haven't been active from memory
 	server := NewAPIServer((":8080"))
 	server.Run()
 }

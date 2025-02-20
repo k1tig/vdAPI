@@ -34,6 +34,7 @@ func (s *APIserver) Run() error {
 	router.HandleFunc("GET /groups/{id}", getGroupById)
 	router.HandleFunc("POST /groups", createGroup)
 	router.HandleFunc("PUT /groups/{id}", updateGroup)
+	router.HandleFunc("DELETE /groups/{id}", deleteGroup)
 
 	server := http.Server{
 		Addr:    s.addr,
@@ -79,7 +80,6 @@ func getGroupById(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`"Message" : "Group not found"`))
-
 }
 
 func createGroup(w http.ResponseWriter, r *http.Request) {
@@ -167,6 +167,44 @@ func updateGroup(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"message": "Group Updated Successfully"}`))
 	}
+}
+
+func deleteGroup(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		http.Error(w, "Invalid id parameter", http.StatusBadRequest)
+	}
+
+	dec := json.NewDecoder(r.Body)
+	var rgUpdate raceGroup
+	err = dec.Decode(&rgUpdate)
+	if err != nil {
+		http.Error(w, "Error Marshalling JSON", http.StatusInternalServerError)
+		return
+	}
+
+	mutex.Lock()
+	defer mutex.Unlock()
+	for targetGroup, i := range racerGroups {
+		if i.GroupId == id {
+			if rgUpdate.GroupPhrase != i.GroupPhrase {
+				respStruct := APIResponse{
+					Success: false,
+					Message: "Permision denied: Passphrase incorrect",
+				}
+				resp := makeResponse(respStruct, w)
+				w.WriteHeader(http.StatusOK)
+				w.Write(resp)
+				break
+			}
+
+			//added work to replace whole bracket instead of just updating, figure out better way later
+			racerGroups = append(racerGroups[:targetGroup], racerGroups[targetGroup+1:]...)
+		}
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"message": "Group Updated Successfully"}`))
+	}
+
 }
 
 // Need to standardize the JSON response format
