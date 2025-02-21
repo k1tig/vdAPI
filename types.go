@@ -15,7 +15,7 @@ type raceGroup struct {
 	GroupPhrase string    `json:"rgGroupPhrase"`
 	GroupRev    int       `json:"rgGroupRev"`
 	Racers      []racer   `json:"rgRacer"`
-	Livetime    time.Time `json:"rgTime"`
+	Lifetime    time.Time `json:"rgTime"`
 }
 
 type racerGroupResponse struct {

@@ -3,6 +3,7 @@ package middleware
 import (
 	"log"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -27,6 +28,18 @@ func Logging(next http.Handler) http.Handler {
 		next.ServeHTTP(wrapped, r)
 
 		log.Println(wrapped.statusCode, r.Method, r.URL.Path, time.Since(start))
+	})
+}
+
+func StripTrailingSlash(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		path := r.URL.Path
+		if len(path) > 1 && path[len(path)-1] == '/' {
+			r.URL.Path = strings.TrimSuffix(path, "/")
+			http.Redirect(w, r, r.URL.Path, http.StatusMovedPermanently)
+			return
+		}
+		next.ServeHTTP(w, r)
 	})
 }
 

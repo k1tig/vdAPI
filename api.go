@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/k1tig/vdAPI/middleware"
 )
@@ -13,16 +14,6 @@ import (
 type APIserver struct {
 	addr string
 }
-
-/*
-
-
-
-
-
-
-
- */
 
 type APIResponse struct {
 	Success bool        `json:"success"`
@@ -40,8 +31,12 @@ func NewAPIServer(addr string) *APIserver {
 
 func (s *APIserver) Run() error {
 	router := http.NewServeMux() //list routes below
+
+	//runs top to bottom
 	stack := middleware.CreateStack(
-		middleware.Logging)
+		middleware.StripTrailingSlash,
+		middleware.Logging,
+	)
 
 	router.HandleFunc("GET /groups", getGroups)
 	router.HandleFunc("GET /groups/{id}", getGroupById)
@@ -122,6 +117,8 @@ func createGroup(w http.ResponseWriter, r *http.Request) {
 	groupCounter++
 	mutex.Lock()
 	racerGroups = append(racerGroups, rg)
+	currentTime := time.Now()
+	rg.Lifetime = currentTime
 	mutex.Unlock()
 
 	respStruct := APIResponse{
@@ -176,6 +173,7 @@ func updateGroup(w http.ResponseWriter, r *http.Request) {
 			//added work to replace whole bracket instead of just updating, figure out better way later
 			racerGroups[targetGroup] = rgUpdate
 			racerGroups[targetGroup].GroupRev++
+			racerGroups[targetGroup].Lifetime = time.Now()
 		}
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"message": "Group Updated Successfully"}`))
