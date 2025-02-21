@@ -8,6 +8,7 @@ package main
 
 func main() {
 	go groupTimeout() // removes groups that haven't been active from memory
+
 	server := NewAPIServer((":8080"))
 	server.Run()
 }
