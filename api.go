@@ -15,25 +15,14 @@ type APIserver struct {
 }
 
 /*
-type Middleware func(http.Handler) http.Handler
-
-func CreateStack(xs ...Middleware) Middleware {
-	return func(next http.Handler) http.Handler {
-		for i := len(xs) - 1; i >= 0; i-- {
-			x := xs[i]
-			next = x(next)
-		}
-		return next
-	}
-}
-
-stack := middleware.CreateStack(
-		middleware.Logging)
 
 
 
 
-*/
+
+
+
+ */
 
 type APIResponse struct {
 	Success bool        `json:"success"`
@@ -51,6 +40,9 @@ func NewAPIServer(addr string) *APIserver {
 
 func (s *APIserver) Run() error {
 	router := http.NewServeMux() //list routes below
+	stack := middleware.CreateStack(
+		middleware.Logging)
+
 	router.HandleFunc("GET /groups", getGroups)
 	router.HandleFunc("GET /groups/{id}", getGroupById)
 	router.HandleFunc("POST /groups", createGroup)
@@ -59,7 +51,7 @@ func (s *APIserver) Run() error {
 
 	server := http.Server{
 		Addr:    s.addr,
-		Handler: middleware.Logging(router),
+		Handler: stack(router),
 	}
 	log.Println("server starting on:", s.addr)
 	return server.ListenAndServe()
