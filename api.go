@@ -115,10 +115,11 @@ func createGroup(w http.ResponseWriter, r *http.Request) {
 	// Not sure if a more specific lock is justified?
 	rg.GroupId = groupCounter
 	groupCounter++
-	mutex.Lock()
-	racerGroups = append(racerGroups, rg)
 	currentTime := time.Now()
 	rg.Lifetime = currentTime
+
+	mutex.Lock()
+	racerGroups = append(racerGroups, rg)
 	mutex.Unlock()
 
 	respStruct := APIResponse{

@@ -7,10 +7,10 @@ import (
 
 // Group timeout limit for memory life
 // timer set short for testing
-var maxTime time.Duration = 15 * time.Second
+var maxTime time.Duration = 30 * time.Second
 
 func groupTimeout() {
-	ticker := time.NewTicker(15 * time.Second)
+	ticker := time.NewTicker(10 * time.Second)
 	defer ticker.Stop()
 
 	shutUpForError := make(chan bool)
