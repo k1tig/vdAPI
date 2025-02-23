@@ -36,6 +36,7 @@ func (s *APIserver) Run() error {
 	stack := middleware.CreateStack(
 		middleware.StripTrailingSlash,
 		middleware.Logging,
+		middleware.ApiKeyMiddleware,
 	)
 
 	router.HandleFunc("GET /groups", getGroups)

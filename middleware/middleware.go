@@ -3,9 +3,14 @@ package middleware
 import (
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"time"
+
+	"github.com/joho/godotenv"
 )
+
+var VDHOLDER string
 
 type Middleware func(http.Handler) http.Handler
 type wrappedWriter struct {
@@ -41,6 +46,30 @@ func StripTrailingSlash(next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+func ApiKeyMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		apiKey := r.Header.Get("X-API-Key") // Get the API key from the header.
+
+		if apiKey == "" || apiKey != VDHOLDER {
+
+			http.Error(w, "Unauthorized ", http.StatusUnauthorized)
+			return
+		}
+
+		next.ServeHTTP(w, r) // Proceed to the next handler if the API key is valid.
+	})
+}
+
+func GetKeys() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	VDHOLDER = os.Getenv("VD_USERKEY")
+
 }
 
 func CreateStack(xs ...Middleware) Middleware {

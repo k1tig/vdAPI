@@ -6,9 +6,14 @@
 
 package main
 
-func main() {
-	go groupTimeout() // removes groups that haven't been active from memory
+import (
+	"github.com/k1tig/vdAPI/middleware"
+)
 
+func main() {
+
+	go groupTimeout() // removes groups that haven't been active from memory
+	middleware.GetKeys()
 	server := NewAPIServer((":8080"))
 	server.Run()
 }

@@ -2,6 +2,8 @@ package main
 
 import "time"
 
+var VDHOLDER string
+
 type racer struct {
 	Name         string      `json:"racername"`
 	QualifyTime  int         `json:"racerQaulifyTime"` //Maybe for server side sorting later?
