@@ -50,14 +50,11 @@ func StripTrailingSlash(next http.Handler) http.Handler {
 
 func ApiKeyMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		apiKey := r.Header.Get("X-API-Key") // Get the API key from the header.
-
+		apiKey := r.Header.Get("X-Api-Key") // Get the API key from the header.
 		if apiKey == "" || apiKey != VDHOLDER {
-
 			http.Error(w, "Unauthorized ", http.StatusUnauthorized)
 			return
 		}
-
 		next.ServeHTTP(w, r) // Proceed to the next handler if the API key is valid.
 	})
 }
@@ -67,9 +64,7 @@ func GetKeys() {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
-
 	VDHOLDER = os.Getenv("VD_USERKEY")
-
 }
 
 func CreateStack(xs ...Middleware) Middleware {
